@@ -2,6 +2,7 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image # Pillow library untuk memproses gambar
+from disease_info import disease_details
 
 # --- Konfigurasi Halaman ---
 st.set_page_config(
@@ -96,10 +97,42 @@ if uploaded_file is not None:
             predicted_class, confidence = predict(image)
 
             # Tampilkan hasil di kolom kedua
-            with col2:
+            # Ganti blok 'with col2:' yang lama dengan yang ini
+            
+       # Ganti seluruh blok 'with col2:' yang lama dengan yang ini
+        with col2:
+            # --- Logika Ambang Batas Kepercayaan ---
+            CONFIDENCE_THRESHOLD = 0.70  # 70%
+
+            if confidence > CONFIDENCE_THRESHOLD:
                 st.success("Analisis Selesai!")
                 st.markdown(f"### **Prediksi:** `{predicted_class}`")
                 st.markdown(f"### **Tingkat Kepercayaan:** `{confidence:.2%}`")
+                st.write("---")
+
+                # Ambil dan tampilkan informasi detail
+                info = disease_details.get(predicted_class, disease_details['default'])
                 
-                # Beri sedikit penjelasan (opsional)
-                st.warning("**Disclaimer:** Ini adalah hasil dari model AI dan mungkin tidak 100% akurat. Selalu konsultasikan dengan ahli agronomi untuk diagnosis definitif.")
+                st.markdown(f"#### Nama Penyakit: {info['nama']}")
+                st.markdown("##### Deskripsi")
+                st.write(info['deskripsi'])
+                st.markdown("##### Gejala Umum")
+                for gejala in info['gejala']:
+                    st.markdown(f"- {gejala}")
+                st.markdown("##### Saran Penanganan")
+                for saran in info['penanganan']:
+                    st.markdown(f"- {saran}")
+            else:
+                # Jika confidence di bawah ambang batas
+                st.error("Model Tidak Cukup Yakin dengan Prediksi Ini.")
+                st.markdown(f"**Tingkat Kepercayaan Terdeteksi:** `{confidence:.2%}` (di bawah `{CONFIDENCE_THRESHOLD:.0%}`)")
+                st.write("---")
+                st.info("Saran:", icon="💡")
+                st.markdown("""
+                - Coba ambil gambar dari sudut yang berbeda.
+                - Pastikan pencahayaan cukup dan tidak ada bayangan yang menutupi daun.
+                - Pastikan gambar fokus dan tidak buram.
+                - Objek utama dalam gambar haruslah daun yang diduga sakit.
+                """)
+
+            st.warning("**Disclaimer:** Ini adalah hasil dari model AI dan mungkin tidak 100% akurat. Selalu konsultasikan dengan ahli agronomi untuk diagnosis definitif.", icon="⚠️")
